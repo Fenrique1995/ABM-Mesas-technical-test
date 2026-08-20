@@ -1,0 +1,271 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Nav */
+.nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #2c3e50;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.nav-brand {
+    font-size: 1.3em;
+    font-weight: bold;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    margin-left: 15px;
+}
+
+.nav-links a:hover {
+    text-decoration: underline;
+}
+
+.nav-links span {
+    color: #ecf0f1;
+    margin-left: 15px;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* Formularios */
+.form-container {
+    max-width: 500px;
+}
+
+form label {
+    display: block;
+    margin-top: 12px;
+    font-weight: 600;
+}
+
+form input[type="text"],
+form input[type="email"],
+form input[type="password"],
+form input[type="number"],
+form input[type="date"],
+form select {
+    width: 100%;
+    padding: 8px 12px;
+    margin-top: 4px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+/* Botones */
+.btn {
+    display: inline-block;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 0.95em;
+    margin-top: 12px;
+    background: #95a5a6;
+    color: white;
+}
+
+.btn-primary {
+    background: #3498db;
+}
+
+.btn-primary:hover {
+    background: #2980b9;
+}
+
+.btn-danger {
+    background: #e74c3c;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+.btn-small {
+    padding: 4px 10px;
+    font-size: 0.85em;
+    margin-top: 0;
+}
+
+/* Tablas */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+th, td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    background: #2c3e50;
+    color: white;
+    font-weight: 600;
+}
+
+tr:hover {
+    background: #f0f0f0;
+}
+
+.actions {
+    white-space: nowrap;
+}
+
+/* Alerts */
+.alert {
+    padding: 10px 16px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+}
+
+.alert-error {
+    background: #fdecea;
+    color: #c0392b;
+    border: 1px solid #f5c6cb;
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+/* Mesas grid */
+.mesas-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 10px 0;
+    min-height: 60px;
+}
+
+.mesa-card {
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    padding: 12px;
+    width: 140px;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.mesa-card:hover {
+    border-color: #3498db;
+}
+
+.mesa-card.selected {
+    border-color: #27ae60;
+    background: #d5f5e3;
+}
+
+/* Ubicación blocks */
+.ubicacion-block {
+    margin-bottom: 30px;
+}
+
+.ubicacion-block h2 {
+    background: #2c3e50;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 4px 4px 0 0;
+}
+
+.ubicacion-block h3 {
+    padding: 8px 16px;
+    background: #ecf0f1;
+    color: #2c3e50;
+}
+
+/* Utilidades */
+.text-center {
+    text-align: center;
+}
+
+.text-muted {
+    color: #888;
+    font-style: italic;
+}
+
+.form-inline {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.form-inline input {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Estados de mesa */
+.badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 600;
+    color: white;
+}
+
+.badge.estado-libre {
+    background: #27ae60;
+}
+
+.badge.estado-reservada {
+    background: #f39c12;
+}
+
+.badge.estado-ocupada {
+    background: #e74c3c;
+}
+
+tr.estado-libre td:first-child {
+    border-left: 4px solid #27ae60;
+}
+
+tr.estado-reservada td:first-child {
+    border-left: 4px solid #f39c12;
+}
+
+tr.estado-ocupada td:first-child {
+    border-left: 4px solid #e74c3c;
+}
