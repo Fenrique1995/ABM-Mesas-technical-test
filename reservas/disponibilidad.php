@@ -21,7 +21,7 @@ $db = getDB();
 // Cache 
 $cacheKey = 'dispo_' . $fecha . '_' . $hora;
 if (!isset($_SESSION[$cacheKey])) {
-    $horaFin = date('H:i:s', strtotime($hora) + 7200);
+    $horaFin = calcularHoraFin($hora);
 
     $stmt = $db->prepare('
         SELECT m.ubicacion, COUNT(m.id) as total
@@ -46,7 +46,7 @@ if (!isset($_SESSION[$cacheKey])) {
 $libres = $_SESSION[$cacheKey];
 
 if ($ubicacion !== '') {
-    $horaFin = date('H:i:s', strtotime($hora) + 7200);
+    $horaFin = calcularHoraFin($hora);
 
     $stmt = $db->prepare('
         SELECT m.id, m.numero, m.capacidad, m.seccion, m.ubicacion
@@ -62,7 +62,7 @@ if ($ubicacion !== '') {
           )
         ORDER BY m.numero
     ');
-    $stmt->execute([':ubicacion' => $ubicacion, ':fecha' => $fecha, ':hora' => $horaFin, ':hora' => $hora]);
+    $stmt->execute([':ubicacion' => $ubicacion, ':fecha' => $fecha, ':hora_fin' => $horaFin, ':hora' => $hora]);
     $mesas = $stmt->fetchAll();
 
     exit(json_encode(['mesas' => $mesas]));

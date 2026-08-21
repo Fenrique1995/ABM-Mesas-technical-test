@@ -67,6 +67,11 @@ $horarios = [
                 <option value="">Elegí fecha y hora primero</option>
             </select>
 
+            <label for="seccion">Sección</label>
+            <select id="seccion" name="seccion">
+                <option value="">Todas las secciones</option>
+            </select>
+
             <div id="mesasDisponibles" class="mesas-grid">
                 <p class="text-muted">Seleccioná fecha, hora y ubicación para ver mesas disponibles.</p>
             </div>
@@ -84,13 +89,17 @@ $horarios = [
     const fechaInput = document.getElementById('fecha');
     const horaSelect = document.getElementById('hora');
     const ubicacionSelect = document.getElementById('ubicacion');
+    const seccionSelect = document.getElementById('seccion');
     const mesasDiv = document.getElementById('mesasDisponibles');
     const mesasSeleccionadas = document.getElementById('mesasSeleccionadas');
     let seleccionadas = [];
+    let mesasData = [];
 
     fechaInput.addEventListener('change', function() {
-        const fecha = new Date(this.value);
-        const dia = fecha.getDay();
+        // Parsear localmente: new Date('YYYY-MM-DD') usa UTC y en UTC-3
+        // devuelve el día anterior
+        const [y, m, d] = this.value.split('-').map(Number);
+        const dia = new Date(y, m - 1, d).getDay();
         const horario = horarios[dia];
         horaSelect.innerHTML = '';
 
@@ -106,6 +115,25 @@ $horarios = [
             for (let h = iniH; h < finH; h++) horas.push(h);
         }
 
+        // Si la fecha es hoy, ocultar horas pasadas o con menos de 15 min
+        const ahora = new Date();
+        const esHoy = y === ahora.getFullYear() && m - 1 === ahora.getMonth() && d === ahora.getDate();
+        const limite = ahora.getHours() * 60 + ahora.getMinutes() + 15;
+        horas = horas.filter(h => {
+            let mins = h * 60;
+            if (esHoy && dia === 6 && h < 6) mins += 1440;
+            return !esHoy || mins >= limite;
+        });
+
+        if (horas.length === 0) {
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = 'No hay horarios disponibles para hoy';
+            horaSelect.appendChild(opt);
+            ubicacionSelect.innerHTML = '<option value="">Elegí otra fecha</option>';
+            return;
+        }
+
         horas.forEach(h => {
             const opt = document.createElement('option');
             opt.value = String(h).padStart(2, '0') + ':00';
@@ -118,14 +146,27 @@ $horarios = [
 
     horaSelect.addEventListener('change', cargarDisponibilidad);
     ubicacionSelect.addEventListener('change', cargarMesas);
+    seccionSelect.addEventListener('change', renderMesas);
+
+    async function pedirJSON(url) {
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error('Error del servidor (' + resp.status + ')');
+        return await resp.json();
+    }
 
     async function cargarDisponibilidad() {
         const fecha = fechaInput.value;
         const hora = horaSelect.value;
         if (!fecha || !hora) return;
 
-        const resp = await fetch('disponibilidad.php?fecha=' + fecha + '&hora=' + hora);
-        const data = await resp.json();
+        let data;
+        try {
+            data = await pedirJSON('disponibilidad.php?fecha=' + fecha + '&hora=' + hora);
+        } catch (e) {
+            ubicacionSelect.innerHTML = '<option value="">Error al consultar disponibilidad</option>';
+            mesasDiv.innerHTML = '<p class="text-muted">Error al consultar disponibilidad: ' + e.message + '</p>';
+            return;
+        }
 
         ubicacionSelect.innerHTML = '';
         if (data.ubicaciones && data.ubicaciones.length > 0) {
@@ -148,27 +189,62 @@ $horarios = [
         const ubicacion = ubicacionSelect.value;
         if (!fecha || !hora || !ubicacion) return;
 
-        const resp = await fetch('disponibilidad.php?fecha=' + fecha + '&hora=' + hora + '&ubicacion=' + ubicacion);
-        const data = await resp.json();
+        let data;
+        try {
+            data = await pedirJSON('disponibilidad.php?fecha=' + fecha + '&hora=' + hora + '&ubicacion=' + encodeURIComponent(ubicacion));
+        } catch (e) {
+            mesasData = [];
+            seccionSelect.innerHTML = '<option value="">Todas las secciones</option>';
+            mesasDiv.innerHTML = '<p class="text-muted">Error al cargar mesas: ' + e.message + '</p>';
+            return;
+        }
 
         seleccionadas = [];
         mesasSeleccionadas.value = '';
         mesasDiv.innerHTML = '';
+        mesasData = data.mesas || [];
 
-        if (data.mesas && data.mesas.length > 0) {
-            data.mesas.forEach(m => {
-                const card = document.createElement('div');
-                card.className = 'mesa-card';
-                card.dataset.id = m.id;
-                card.innerHTML = '<strong>Mesa #' + m.numero + '</strong><br>' +
-                    'Cap: ' + m.capacidad + ' personas<br>' +
-                    '<small>' + m.seccion + '</small>';
-                card.addEventListener('click', () => toggleMesa(m.id, card));
-                mesasDiv.appendChild(card);
-            });
-        } else {
-            mesasDiv.innerHTML = '<p class="text-muted">No hay mesas disponibles en esta ubicación.</p>';
+        // Poblar secciones con mesas disponibles
+        const secciones = [...new Set(mesasData.map(m => m.seccion))];
+        const seccionPrevia = seccionSelect.value;
+        seccionSelect.innerHTML = '<option value="">Todas las secciones</option>';
+        secciones.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = s;
+            seccionSelect.appendChild(opt);
+        });
+        if (secciones.includes(seccionPrevia)) {
+            seccionSelect.value = seccionPrevia;
         }
+
+        renderMesas();
+    }
+
+    function renderMesas() {
+        const filtro = seccionSelect.value;
+        const visibles = filtro ? mesasData.filter(m => m.seccion === filtro) : mesasData;
+
+        // Deseleccionar mesas que quedaron fuera del filtro
+        seleccionadas = seleccionadas.filter(id => visibles.some(m => m.id === id));
+        mesasSeleccionadas.value = seleccionadas.join(',');
+        mesasDiv.innerHTML = '';
+
+        if (visibles.length === 0) {
+            mesasDiv.innerHTML = '<p class="text-muted">No hay mesas disponibles en esta ubicación.</p>';
+            return;
+        }
+
+        visibles.forEach(m => {
+            const card = document.createElement('div');
+            card.className = 'mesa-card';
+            card.dataset.id = m.id;
+            if (seleccionadas.includes(m.id)) card.classList.add('selected');
+            card.innerHTML = '<strong>Mesa #' + m.numero + '</strong><br>' +
+                'Cap: ' + m.capacidad + ' personas<br>';
+            card.addEventListener('click', () => toggleMesa(m.id, card));
+            mesasDiv.appendChild(card);
+        });
     }
 
     function toggleMesa(id, card) {

@@ -44,8 +44,7 @@ foreach ($reservas as $row) {
         'mesas'       => [],
     ];
     $agrupado[$ubi][$seccion][$rid]['mesas'][] = [
-        'numero'     => $row['mesa_numero'],
-        'capacidad'  => $row['mesa_capacidad'],
+        'numero'     => $row['mesa_numero']
     ];
 }
 ?>
@@ -106,7 +105,7 @@ foreach ($reservas as $row) {
                                         <td>
                                             <?php
                                             $mesasStr = array_map(function($m) {
-                                                return '#' . $m['numero'] . ' (' . $m['capacidad'] . 'p)';
+                                                return '#' . $m['numero'];
                                             }, $r['mesas']);
                                             echo htmlspecialchars(implode(', ', $mesasStr));
                                             ?>

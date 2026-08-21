@@ -1,4 +1,6 @@
 <?php
+date_default_timezone_set('America/Argentina/Buenos_Aires');
+
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'abm_mesas');
 define('DB_USER', 'root');
@@ -15,4 +17,9 @@ function getDB(): PDO {
         ]);
     }
     return $pdo;
+}
+
+function calcularHoraFin(string $hora, int $duracionSegundos = 7200): string {
+    $mins = ((int)substr($hora, 0, 2)) * 60 + (int)substr($hora, 3, 2) + intdiv($duracionSegundos, 60);
+    return sprintf('%02d:%02d:00', intdiv($mins, 60), $mins % 60);
 }

@@ -42,7 +42,9 @@ switch ($diaSemana) {
 // Validar que sea al menos 15 min antes
 $horaReserva = strtotime($fecha . ' ' . $hora);
 $ahora       = time();
-if ($horaReserva - $ahora < 900) {
+if ($horaReserva < $ahora) {
+    $errors[] = 'La hora indicada ya pasó. Elegí un horario futuro.';
+} elseif ($horaReserva - $ahora < 900) {
     $errors[] = 'Debes reservar con al menos 15 minutos de anticipación.';
 }
 
@@ -72,7 +74,7 @@ if (empty($errors) && count($mesasIds) > 0) {
 
 // Verificar disponibilidad
 if (empty($errors)) {
-    $horaFin = date('H:i:s', strtotime($hora) + 7200);
+    $horaFin = calcularHoraFin($hora);
     $placeholders = implode(',', array_fill(0, count($mesasIds), '?'));
     $stmt = $db->prepare("
         SELECT rm.mesa_id
@@ -98,7 +100,7 @@ if (!empty($errors)) {
 }
 
 // Crear reserva
-$horaFin = date('H:i:s', strtotime($hora) + 7200);
+$horaFin = calcularHoraFin($hora);
 
 $db->beginTransaction();
 try {
