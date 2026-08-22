@@ -90,7 +90,9 @@ form select {
     border-radius: 4px;
     text-decoration: none;
     cursor: pointer;
+    font-family: inherit;
     font-size: 0.95em;
+    line-height: 1.5;
     margin-top: 12px;
     background: #95a5a6;
     color: white;
@@ -115,6 +117,7 @@ form select {
 .btn-small {
     padding: 4px 10px;
     font-size: 0.85em;
+    line-height: 1.4;
     margin-top: 0;
 }
 
@@ -205,7 +208,8 @@ tr:hover {
     background: #2c3e50;
     color: white;
     padding: 10px 16px;
-    border-radius: 4px 4px 0 0;
+    border-radius: 4px 4px 4px 4px;
+    margin-bottom: 5px;
 }
 
 .ubicacion-block h3 {
@@ -228,6 +232,10 @@ tr:hover {
     display: flex;
     gap: 10px;
     align-items: center;
+}
+
+.form-inline .btn {
+    margin-top: 0;
 }
 
 .form-inline input {
@@ -268,4 +276,120 @@ tr.estado-reservada td:first-child {
 
 tr.estado-ocupada td:first-child {
     border-left: 4px solid #e74c3c;
+}
+
+/* Reservas canceladas */
+tr.reserva-cancelada td {
+    text-decoration: line-through;
+    color: #999;
+}
+
+tr.reserva-cancelada td .text-muted,
+tr.reserva-cancelada td.actions {
+    text-decoration: none;
+    color: #888;
+}
+
+/* Responsive */
+.table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 640px) {
+    .nav {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+    }
+
+    .nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 4px 12px;
+    }
+
+    .nav-links a,
+    .nav-links span {
+        margin-left: 0;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .table-wrapper {
+        overflow-x: visible;
+    }
+
+    .table-wrapper table {
+        display: block;
+        background: none;
+        box-shadow: none;
+        border-radius: 0;
+    }
+
+    .table-wrapper thead {
+        display: none;
+    }
+
+    .table-wrapper tbody {
+        display: block;
+    }
+
+    .table-wrapper tr {
+        display: block;
+        background: white;
+        border: 1px solid #e5e5e5;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        padding: 6px 12px;
+        margin-bottom: 12px;
+    }
+
+    .table-wrapper tr:hover {
+        background: white;
+    }
+
+    .table-wrapper td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 6px 0;
+        font-size: 0.9em;
+        word-break: break-word;
+    }
+
+    .table-wrapper td[data-label]::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #2c3e50;
+        flex-shrink: 0;
+    }
+
+    .table-wrapper td:not(:last-child) {
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .table-wrapper tr.estado-libre td:first-child,
+    .table-wrapper tr.estado-reservada td:first-child,
+    .table-wrapper tr.estado-ocupada td:first-child {
+        border-left: none;
+    }
+
+    .table-wrapper tr.estado-libre {
+        border-top: 4px solid #27ae60;
+    }
+
+    .table-wrapper tr.estado-reservada {
+        border-top: 4px solid #f39c12;
+    }
+
+    .table-wrapper tr.estado-ocupada {
+        border-top: 4px solid #e74c3c;
+    }
 }

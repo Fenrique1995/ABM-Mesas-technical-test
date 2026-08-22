@@ -22,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $stmt->fetch();
 
         if ($user && password_verify($pass, $user['password_hash'])) {
+            session_regenerate_id(true);
             $_SESSION['usuario_id']     = $user['id'];
             $_SESSION['usuario_nombre'] = $user['nombre'];
             $_SESSION['usuario_email']  = $user['email'];
@@ -38,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión</title>
-    <link rel="stylesheet" href="/css/estilo.css">
+    <link rel="stylesheet" href="/css/estilo.css?v=6">
 </head>
 <body>
     <div class="container form-container">

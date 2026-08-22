@@ -23,7 +23,7 @@ $cacheKey = 'dispo_' . $fecha . '_' . $hora;
 if (!isset($_SESSION[$cacheKey])) {
     $horaFin = calcularHoraFin($hora);
 
-    $stmt = $db->prepare('
+    $stmt = $db->prepare("
         SELECT m.ubicacion, COUNT(m.id) as total
         FROM mesas m
         WHERE m.id NOT IN (
@@ -33,10 +33,11 @@ if (!isset($_SESSION[$cacheKey])) {
             WHERE r.fecha = :fecha
               AND r.hora_inicio < :hora_fin
               AND r.hora_fin > :hora
+              AND r.estado = 'activa'
         )
         GROUP BY m.ubicacion
         ORDER BY m.ubicacion
-    ');
+    ");
     $stmt->execute([':fecha' => $fecha, ':hora_fin' => $horaFin, ':hora' => $hora]);
     $libres = $stmt->fetchAll();
 
@@ -48,8 +49,8 @@ $libres = $_SESSION[$cacheKey];
 if ($ubicacion !== '') {
     $horaFin = calcularHoraFin($hora);
 
-    $stmt = $db->prepare('
-        SELECT m.id, m.numero, m.capacidad, m.seccion, m.ubicacion
+    $stmt = $db->prepare("
+        SELECT m.id, m.numero, m.capacidad, m.ubicacion
         FROM mesas m
         WHERE m.ubicacion = :ubicacion
           AND m.id NOT IN (
@@ -59,9 +60,10 @@ if ($ubicacion !== '') {
               WHERE r.fecha = :fecha
                 AND r.hora_inicio < :hora_fin
                 AND r.hora_fin > :hora
+                AND r.estado = 'activa'
           )
         ORDER BY m.numero
-    ');
+    ");
     $stmt->execute([':ubicacion' => $ubicacion, ':fecha' => $fecha, ':hora_fin' => $horaFin, ':hora' => $hora]);
     $mesas = $stmt->fetchAll();
 

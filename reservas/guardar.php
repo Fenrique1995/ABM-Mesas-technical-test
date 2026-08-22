@@ -12,6 +12,11 @@ $ubicacion = $_POST['ubicacion'] ?? '';
 $cantidad  = (int)($_POST['cantidad'] ?? 0);
 $mesasRaw  = $_POST['mesas_seleccionadas'] ?? '';
 
+// Normalizar hora: si el formato no es HH:MM válido se trata como vacía
+if ($hora !== '' && !preg_match('/^([01]?\d|2[0-3]):[0-5]\d$/', $hora)) {
+    $hora = '';
+}
+
 $errors = [];
 
 if ($fecha === '') $errors[] = 'La fecha es obligatoria.';
@@ -39,6 +44,17 @@ switch ($diaSemana) {
         break;
 }
 
+// Validar que la reserva termine dentro del horario de cierre
+$minutos = ((int)date('G', strtotime($hora))) * 60 + (int)date('i', strtotime($hora));
+$cierres = [0 => 16 * 60, 6 => (2 + 24) * 60];
+$cierre  = $cierres[$diaSemana] ?? 24 * 60;
+if ($diaSemana === 6 && $horaNum < 6) {
+    $minutos += 24 * 60;
+}
+if ($minutos + 120 > $cierre) {
+    $errors[] = 'La reserva debe terminar antes del horario de cierre.';
+}
+
 // Validar que sea al menos 15 min antes
 $horaReserva = strtotime($fecha . ' ' . $hora);
 $ahora       = time();
@@ -51,7 +67,7 @@ if ($horaReserva < $ahora) {
 // Validar que las mesas existan y sean de la misma ubicación
 if (empty($errors) && count($mesasIds) > 0) {
     $placeholders = implode(',', array_fill(0, count($mesasIds), '?'));
-    $stmt = $db->prepare("SELECT id, ubicacion, capacidad FROM mesas WHERE id IN ($placeholders)");
+    $stmt = $db->prepare("SELECT id, ubicacion, numero, capacidad FROM mesas WHERE id IN ($placeholders)");
     $stmt->execute($mesasIds);
     $mesas = $stmt->fetchAll();
 
@@ -69,6 +85,12 @@ if (empty($errors) && count($mesasIds) > 0) {
         if ($cantidad > $capTotal) {
             $errors[] = "Las mesas seleccionadas solo tienen capacidad para $capTotal personas.";
         }
+
+        $cantidadMesas   = count($mesas);
+        $mesasReservadas = '';
+        foreach ($mesas as $m) {
+            $mesasReservadas .= ($mesasReservadas === '' ? '' : ', ') . $m['numero'];
+        }
     }
 }
 
@@ -81,6 +103,7 @@ if (empty($errors)) {
         FROM reserva_mesas rm
         JOIN reservas r ON r.id = rm.reserva_id
         WHERE rm.mesa_id IN ($placeholders)
+          AND r.estado = 'activa'
           AND r.fecha = ?
           AND r.hora_inicio < ?
           AND r.hora_fin > ?
@@ -104,14 +127,16 @@ $horaFin = calcularHoraFin($hora);
 
 $db->beginTransaction();
 try {
-    $stmt = $db->prepare('INSERT INTO reservas (usuario_id, fecha, hora_inicio, hora_fin, cantidad_personas, ubicacion) VALUES (:uid, :fecha, :ini, :fin, :cant, :ubi)');
+    $stmt = $db->prepare('INSERT INTO reservas (usuario_id, fecha, hora_inicio, hora_fin, cantidad_personas, cantidad_mesas, mesas_reservadas, ubicacion) VALUES (:uid, :fecha, :ini, :fin, :cant, :cmesas, :mesas, :ubi)');
     $stmt->execute([
-        ':uid'   => $_SESSION['usuario_id'],
-        ':fecha' => $fecha,
-        ':ini'   => $hora,
-        ':fin'   => $horaFin,
-        ':cant'  => $cantidad,
-        ':ubi'   => $ubicacion,
+        ':uid'    => $_SESSION['usuario_id'],
+        ':fecha'  => $fecha,
+        ':ini'    => $hora,
+        ':fin'    => $horaFin,
+        ':cant'   => $cantidad,
+        ':cmesas' => $cantidadMesas,
+        ':mesas'  => $mesasReservadas,
+        ':ubi'    => $ubicacion,
     ]);
     $reservaId = $db->lastInsertId();
 

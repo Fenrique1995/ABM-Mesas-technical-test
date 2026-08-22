@@ -23,3 +23,11 @@ function calcularHoraFin(string $hora, int $duracionSegundos = 7200): string {
     $mins = ((int)substr($hora, 0, 2)) * 60 + (int)substr($hora, 3, 2) + intdiv($duracionSegundos, 60);
     return sprintf('%02d:%02d:00', intdiv($mins, 60), $mins % 60);
 }
+
+function formatearHora(string $hora): string {
+    $h = (int)substr($hora, 0, 2);
+    if ($h > 24) {
+        $h %= 24;
+    }
+    return sprintf('%02d:%02d', $h, (int)substr($hora, 3, 2));
+}

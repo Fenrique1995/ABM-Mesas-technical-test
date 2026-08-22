@@ -19,7 +19,6 @@ CREATE TABLE mesas (
     ubicacion ENUM('A', 'B', 'C', 'D') NOT NULL,
     numero INT NOT NULL,
     capacidad INT NOT NULL DEFAULT 4,
-    seccion VARCHAR(50) NOT NULL DEFAULT 'General',
     UNIQUE KEY uk_mesa (ubicacion, numero)
 ) ENGINE=InnoDB;
 
@@ -31,7 +30,11 @@ CREATE TABLE reservas (
     hora_inicio TIME NOT NULL,
     hora_fin TIME NOT NULL,
     cantidad_personas INT NOT NULL,
+    cantidad_mesas TINYINT NOT NULL DEFAULT 1,
+    mesas_reservadas VARCHAR(100) NOT NULL DEFAULT '',
     ubicacion ENUM('A', 'B', 'C', 'D') NOT NULL,
+    estado ENUM('activa', 'cancelada') NOT NULL DEFAULT 'activa',
+    cancelada_en DATETIME NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
     INDEX idx_reserva_fecha_ubicacion (fecha, ubicacion),
@@ -52,20 +55,20 @@ CREATE TABLE reserva_mesas (
 INSERT INTO usuarios (nombre, email, password_hash) VALUES
     ('Admin', 'admin@resto.com', '$2y$10$87PNmHbygz0UG3LxsLlHzegbvYxRJ11SnO/DCZww9YNfCU2bdXh8S');
 
-INSERT INTO mesas (ubicacion, numero, capacidad, seccion) VALUES
-    ('A', 1, 2, 'Patio'),
-    ('A', 2, 4, 'Patio'),
-    ('A', 3, 4, 'Patio'),
-    ('A', 4, 6, 'Patio'),
-    ('B', 1, 2, 'Interior'),
-    ('B', 2, 4, 'Interior'),
-    ('B', 3, 4, 'Interior'),
-    ('B', 4, 6, 'Interior'),
-    ('B', 5, 8, 'Interior'),
-    ('C', 1, 2, 'Terraza'),
-    ('C', 2, 4, 'Terraza'),
-    ('C', 3, 4, 'Terraza'),
-    ('C', 4, 2, 'Terraza'),
-    ('D', 1, 4, 'VIP'),
-    ('D', 2, 6, 'VIP'),
-    ('D', 3, 8, 'VIP');
+INSERT INTO mesas (ubicacion, numero, capacidad) VALUES
+    ('A', 1, 2),
+    ('A', 2, 4),
+    ('A', 3, 4),
+    ('A', 4, 6),
+    ('B', 1, 2),
+    ('B', 2, 4),
+    ('B', 3, 4),
+    ('B', 4, 6),
+    ('B', 5, 8),
+    ('C', 1, 2),
+    ('C', 2, 4),
+    ('C', 3, 4),
+    ('C', 4, 2),
+    ('D', 1, 4),
+    ('D', 2, 6),
+    ('D', 3, 8);

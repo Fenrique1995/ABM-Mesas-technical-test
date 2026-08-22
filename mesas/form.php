@@ -21,13 +21,12 @@ if ($id > 0) {
 }
 
 $error   = '';
-$datos   = $mesa ?? ['ubicacion' => 'A', 'numero' => 1, 'capacidad' => 4, 'seccion' => 'General'];
+$datos   = $mesa ?? ['ubicacion' => 'A', 'numero' => 1, 'capacidad' => 4];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $datos['ubicacion'] = strtoupper(trim($_POST['ubicacion'] ?? 'A'));
     $datos['numero']    = (int)($_POST['numero'] ?? 1);
     $datos['capacidad'] = (int)($_POST['capacidad'] ?? 4);
-    $datos['seccion']   = trim($_POST['seccion'] ?? 'General');
 
     if (!in_array($datos['ubicacion'], ['A', 'B', 'C', 'D'])) {
         $error = 'Ubicación inválida.';
@@ -38,11 +37,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             if ($id > 0) {
-                $stmt = $db->prepare('UPDATE mesas SET ubicacion = :u, numero = :n, capacidad = :c, seccion = :s WHERE id = :id');
-                $stmt->execute([':u' => $datos['ubicacion'], ':n' => $datos['numero'], ':c' => $datos['capacidad'], ':s' => $datos['seccion'], ':id' => $id]);
+                $stmt = $db->prepare('UPDATE mesas SET ubicacion = :u, numero = :n, capacidad = :c WHERE id = :id');
+                $stmt->execute([':u' => $datos['ubicacion'], ':n' => $datos['numero'], ':c' => $datos['capacidad'], ':id' => $id]);
             } else {
-                $stmt = $db->prepare('INSERT INTO mesas (ubicacion, numero, capacidad, seccion) VALUES (:u, :n, :c, :s)');
-                $stmt->execute([':u' => $datos['ubicacion'], ':n' => $datos['numero'], ':c' => $datos['capacidad'], ':s' => $datos['seccion']]);
+                $stmt = $db->prepare('INSERT INTO mesas (ubicacion, numero, capacidad) VALUES (:u, :n, :c)');
+                $stmt->execute([':u' => $datos['ubicacion'], ':n' => $datos['numero'], ':c' => $datos['capacidad']]);
             }
             header('Location: index.php');
             exit;
@@ -62,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $title ?></title>
-    <link rel="stylesheet" href="/css/estilo.css">
+    <link rel="stylesheet" href="/css/estilo.css?v=6">
 </head>
 <body>
     <div class="container form-container">
@@ -81,12 +80,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="number" id="numero" name="numero" min="1" required value="<?= (int)$datos['numero'] ?>">
             <label for="capacidad">Capacidad</label>
             <input type="number" id="capacidad" name="capacidad" min="1" required value="<?= (int)$datos['capacidad'] ?>">
-            <label for="seccion">Sección</label>
-            <select id="seccion" name="seccion" required>
-                <?php foreach (['Patio', 'Interior', 'Terraza', 'VIP'] as $s): ?>
-                    <option value="<?= $s ?>" <?= $datos['seccion'] === $s ? 'selected' : '' ?>><?= $s ?></option>
-                <?php endforeach; ?>
-            </select>
             <button type="submit" class="btn btn-primary">Guardar</button>
             <a href="index.php" class="btn">Cancelar</a>
         </form>

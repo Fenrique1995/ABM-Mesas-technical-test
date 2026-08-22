@@ -7,6 +7,8 @@ requireLogin();
 $db    = getDB();
 $hoy   = date('Y-m-d');
 $ahora = date('H:i:s');
+$error = $_GET['error'] ?? '';
+$exito = $_GET['exito'] ?? '';
 
 $mesas = $db->query('SELECT * FROM mesas ORDER BY ubicacion, numero')->fetchAll();
 
@@ -21,6 +23,7 @@ if (!empty($mesas)) {
         JOIN reservas r ON r.id = rm.reserva_id
         JOIN usuarios u ON u.id = r.usuario_id
         WHERE rm.mesa_id IN ($placeholders)
+          AND r.estado = 'activa'
           AND (
               (r.fecha = ? AND r.hora_inicio <= ? AND r.hora_fin > ?)
               OR (r.fecha = ? AND r.hora_inicio > ?)
@@ -47,7 +50,7 @@ if (!empty($mesas)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mesas</title>
-    <link rel="stylesheet" href="/css/estilo.css">
+    <link rel="stylesheet" href="/css/estilo.css?v=6">
 </head>
 <body>
     <div class="container">
@@ -67,16 +70,23 @@ if (!empty($mesas)) {
             <a href="form.php" class="btn btn-primary">+ Nueva Mesa</a>
         </div>
 
+        <?php if ($error): ?>
+            <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
+        <?php endif; ?>
+        <?php if ($exito): ?>
+            <div class="alert alert-success"><?= htmlspecialchars($exito) ?></div>
+        <?php endif; ?>
+
         <?php if (empty($mesas)): ?>
             <p>No hay mesas cargadas.</p>
         <?php else: ?>
+            <div class="table-wrapper">
             <table>
                 <thead>
                     <tr>
                         <th>Ubicación</th>
                         <th>Número</th>
                         <th>Capacidad</th>
-                        <th>Sección</th>
                         <th>Estado</th>
                         <th>Reserva / Horario</th>
                         <th>Acciones</th>
@@ -113,19 +123,18 @@ if (!empty($mesas)) {
                         }
                         ?>
                         <tr class="<?= $estadoClass ?>">
-                            <td><?= htmlspecialchars($m['ubicacion']) ?></td>
-                            <td><?= (int)$m['numero'] ?></td>
-                            <td><?= (int)$m['capacidad'] ?></td>
-                            <td><?= htmlspecialchars($m['seccion']) ?></td>
-                            <td><span class="badge <?= $estadoClass ?>"><?= $estadoTexto ?></span></td>
-                            <td>
+                            <td data-label="Ubicación"><?= htmlspecialchars($m['ubicacion']) ?></td>
+                            <td data-label="Número"><?= (int)$m['numero'] ?></td>
+                            <td data-label="Capacidad"><?= (int)$m['capacidad'] ?></td>
+                            <td data-label="Estado"><span class="badge <?= $estadoClass ?>"><?= $estadoTexto ?></span></td>
+                            <td data-label="Reserva">
                                 <?php if ($ocupada && $proxima): ?>
                                     <strong><?= htmlspecialchars($proxima['cliente']) ?></strong><br>
-                                    <?= $proxima['fecha'] ?> <?= substr($proxima['hora_inicio'], 0, 5) ?> - <?= substr($proxima['hora_fin'], 0, 5) ?>
+                                    <?= substr($proxima['hora_inicio'], 0, 5) ?> - <?= formatearHora($proxima['hora_fin']) ?>
                                     <br><small><?= $proxima['cantidad_personas'] ?> personas</small>
                                 <?php elseif ($proxima): ?>
                                     <strong><?= htmlspecialchars($proxima['cliente']) ?></strong><br>
-                                    <?= $proxima['fecha'] ?> <?= substr($proxima['hora_inicio'], 0, 5) ?> - <?= substr($proxima['hora_fin'], 0, 5) ?>
+                                    <?= substr($proxima['hora_inicio'], 0, 5) ?> - <?= formatearHora($proxima['hora_fin']) ?>
                                     <br><small><?= $proxima['cantidad_personas'] ?> personas</small>
                                 <?php else: ?>
                                     <span class="text-muted">Sin reservas</span>
@@ -139,6 +148,7 @@ if (!empty($mesas)) {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
         <?php endif; ?>
     </div>
 </body>
