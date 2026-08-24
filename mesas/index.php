@@ -133,7 +133,6 @@ if (!empty($mesas)) {
                             <td data-label="Estado"><span class="badge <?= $estadoClass ?>"><?= $estadoTexto ?></span></td>
                             <td data-label="Próxima reserva">
                                 <?php if ($proxima): ?>
-                                    <strong><?= htmlspecialchars($proxima['cliente']) ?></strong><br>
                                     <?php if ($proxima['fecha'] !== $hoy): ?>
                                         <small><?= date('d/m', strtotime($proxima['fecha'])) ?> · </small>
                                     <?php endif; ?>
