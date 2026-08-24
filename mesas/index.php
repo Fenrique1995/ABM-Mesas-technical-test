@@ -24,14 +24,10 @@ if (!empty($mesas)) {
         JOIN usuarios u ON u.id = r.usuario_id
         WHERE rm.mesa_id IN ($placeholders)
           AND r.estado = 'activa'
-          AND (
-              (r.fecha = ? AND r.hora_inicio <= ? AND r.hora_fin > ?)
-              OR (r.fecha = ? AND r.hora_inicio > ?)
-          )
+          AND (r.fecha > ? OR (r.fecha = ? AND r.hora_fin > ?))
         ORDER BY r.fecha, r.hora_inicio
-        LIMIT 50
     ");
-    $params = array_merge($mesasIds, [$hoy, $ahora, $ahora, $hoy, $ahora]);
+    $params = array_merge($mesasIds, [$hoy, $hoy, $ahora]);
     $stmt->execute($params);
     $all = $stmt->fetchAll();
 
@@ -88,28 +84,36 @@ if (!empty($mesas)) {
                         <th>Número</th>
                         <th>Capacidad</th>
                         <th>Estado</th>
-                        <th>Reserva / Horario</th>
+                        <th>Próxima reserva</th>
+                        <th>Reservas</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($mesas as $m): ?>
                         <?php
-                        $mid      = $m['id'];
-                        $reservas = $reservasActivas[$mid] ?? [];
-                        $ocupada  = false;
-                        $proxima  = null;
+                        $mid     = $m['id'];
+                        $todas   = $reservasActivas[$mid] ?? [];
+                        $ocupada = false;
+                        $proxima = null;
 
-                        foreach ($reservas as $r) {
+                        foreach ($todas as $r) {
                             if ($r['fecha'] === $hoy && $r['hora_inicio'] <= $ahora && $r['hora_fin'] > $ahora) {
                                 $ocupada = true;
                                 $proxima = $r;
                                 break;
                             }
-                            if ($proxima === null) {
-                                $proxima = $r;
-                            }
                         }
+                        if (!$ocupada && !empty($todas)) {
+                            $proxima = $todas[0];
+                        }
+
+                        // Días únicos con reservas pendientes
+                        $dias = [];
+                        foreach ($todas as $r) {
+                            $dias[$r['fecha']][] = $r;
+                        }
+                        $cantReservas = count($todas);
 
                         if ($ocupada) {
                             $estadoClass = 'estado-ocupada';
@@ -127,17 +131,26 @@ if (!empty($mesas)) {
                             <td data-label="Número"><?= (int)$m['numero'] ?></td>
                             <td data-label="Capacidad"><?= (int)$m['capacidad'] ?></td>
                             <td data-label="Estado"><span class="badge <?= $estadoClass ?>"><?= $estadoTexto ?></span></td>
-                            <td data-label="Reserva">
-                                <?php if ($ocupada && $proxima): ?>
+                            <td data-label="Próxima reserva">
+                                <?php if ($proxima): ?>
                                     <strong><?= htmlspecialchars($proxima['cliente']) ?></strong><br>
-                                    <?= substr($proxima['hora_inicio'], 0, 5) ?> - <?= formatearHora($proxima['hora_fin']) ?>
-                                    <br><small><?= $proxima['cantidad_personas'] ?> personas</small>
-                                <?php elseif ($proxima): ?>
-                                    <strong><?= htmlspecialchars($proxima['cliente']) ?></strong><br>
+                                    <?php if ($proxima['fecha'] !== $hoy): ?>
+                                        <small><?= date('d/m', strtotime($proxima['fecha'])) ?> · </small>
+                                    <?php endif; ?>
                                     <?= substr($proxima['hora_inicio'], 0, 5) ?> - <?= formatearHora($proxima['hora_fin']) ?>
                                     <br><small><?= $proxima['cantidad_personas'] ?> personas</small>
                                 <?php else: ?>
                                     <span class="text-muted">Sin reservas</span>
+                                <?php endif; ?>
+                            </td>
+                            <td data-label="Reservas">
+                                <?php if ($cantReservas > 0): ?>
+                                    <?= $cantReservas ?> reserva<?= $cantReservas === 1 ? '' : 's' ?><br>
+                                    <small><?= htmlspecialchars(implode(', ', array_map(function ($f) use ($hoy) {
+                                        return $f === $hoy ? 'hoy' : date('d/m', strtotime($f));
+                                    }, array_keys($dias)))) ?></small>
+                                <?php else: ?>
+                                    <span class="text-muted">—</span>
                                 <?php endif; ?>
                             </td>
                             <td class="actions">
